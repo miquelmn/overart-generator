@@ -28,7 +28,7 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 
-random.seed(42)
+np.random.seed(42)
 
 
 def parse_arguments(parser: argparse.ArgumentParser):
