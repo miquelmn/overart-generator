@@ -83,7 +83,7 @@ def set_centers(cells, rang_dist: Tuple[Union[int, float], Union[int, float]]):
     min_dist, max_dist = rang_dist
     width, height = cells[0]["shape"]
 
-    cells[0]["center"] = width / 2, height / 2
+    cells[0]["center"] = int(width / 2), int(height / 2)
 
     checked = np.zeros((len(cells)))
     checked[0] = 2
@@ -98,7 +98,7 @@ def set_centers(cells, rang_dist: Tuple[Union[int, float], Union[int, float]]):
             for j in range(1, len(cells)):
                 pos_c = (j + i) % 3
                 cell = cells[pos_c]
-                if cells[pos_c].exists_center():
+                if "center" in cells[pos_c]:
                     checked[i] += 1
                     if img_c.max() == 0:
                         img_c[cell["center"][0] + min_dist:cell["center"][0] + max_dist,
@@ -135,18 +135,18 @@ def run():
 
     s_cells = []
     for i in tqdm(range(n_images), desc="Image generation"):
-        img = np.zeros((width, height))
+        img = np.zeros((width, height, 3))
         cells = []
         for j in range(n_cells):
             cells.append(random_cell(max_r, min_r, (width, height)))
         set_centers(cells, (min_dist, max_dist))
         for c in cells:
-            c_img = np.zeros_like(img)
+            c_img = np.zeros((img.shape[0], img.shape[1], 3), dtype=np.uint8)
             major_radius, minor_radius = c["radius"]
             center = c["center"]
-            c_img = cv2.ellipse(c_img, center=center,
+            c_img = cv2.ellipse(c_img, center=(center[0], center[1]),
                                 axes=(int(major_radius), int(minor_radius)),
-                                angle=np.rad2deg(c['phi']),
+                                angle=int(np.rad2deg(c['phi'])),
                                 startAngle=0.0, endAngle=360, color=(1, 1, 1),
                                 thickness=-1)
 
@@ -156,8 +156,8 @@ def run():
 
         s_cells = s_cells + cells
 
-    out = [np.array([c.center[0], c.center[1], c.major_radius, c.minor_radius, c.angle]) for c in
-           s_cells]
+    out = [np.array([c["center"][0], c["center"][1], max(c["radius"]), min(c["radius"]), c["phi"]])
+           for c in s_cells]
 
     out = np.array(out)
 
